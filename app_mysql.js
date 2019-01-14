@@ -90,6 +90,58 @@ app.get(['/topic/:id/edit'], function (req, res) {
     });
 });
 
+app.post(['/topic/:id/edit'], function (req, res) {
+    var title = req.body.title;
+    var description = req.body.description;
+    var author = req.body.author;
+    var id = req.params.id;
+    var sql = 'update topic set title=?, description=?, author=? where id=?';
+    conn.query(sql, [title, description, author, id], function(err, results, feilds){
+        if(err){
+            console.log(err);
+            res.status(500).send('Internal Server Error');
+        } else{
+            res.redirect('/topic/'+id);
+        }
+    });
+});
+
+
+app.get(['/topic/:id/delete'], function (req, res) {
+    var sql = 'select id, title from topic';
+    id = req.params.id;
+    conn.query(sql, function(err, topics, fields){
+        var sql='select * from topic where id=?';
+        conn.query(sql, [id], function(err, topic){
+            if(err){
+                console.log(err);
+                res.status(500).send('Internal Server Error');
+            } else{
+                if(topic.length===0){
+                    console.log(err);
+                    res.status(500).send('There is no id');
+                } else{
+                    res.render('delete',{topics:topics, topic:topic[0]});
+                }
+            }
+        });
+    });
+});
+
+app.post(['/topic/:id/delete'], function (req, res) {
+    var id = req.params.id;
+    var sql = 'delete from topic where id=?';
+    conn.query(sql, [id], function(err, results, feilds){
+        if(err){
+            console.log(err);
+            res.status(500).send('Internal Server Error');
+        } else{
+            res.redirect('/topic/'+id);
+        }
+    });
+});
+
+
 app.get(['/topic', '/topic/:id'], function (req, res) {
     var sql = 'select id,title from topic;';
     conn.query(sql, function(err, topics, fields){
@@ -122,7 +174,6 @@ app.post('/topic', function (req, res) {
     });
 
 });
-
 
 
 app.listen(3000, function () {
