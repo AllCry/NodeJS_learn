@@ -1,6 +1,6 @@
 var express = require('express');
 var session = require('express-session');
-var FileStore = require('session-file-store')(session);
+var MySQLStore = require('express-mysql-session')(session);
 var bodyParser = require('body-parser');
 var app = express();
 app.use(bodyParser.urlencoded({ extended:false }));
@@ -9,7 +9,13 @@ app.use(session({
     secret: 'random key',
     resave: false,
     saveUninitialized: true,
-    store: new FileStore()
+    store: new MySQLStore({
+        host:'localhost',
+        port:3306,
+        user:'root',
+        password:'wjdekdns',
+        database:'o2'
+    })
 }));
 
 app.get('/count', function(req, res){
@@ -23,7 +29,9 @@ app.get('/count', function(req, res){
 });
 app.get('/auth/logout', function(req, res){
     delete res.session.displayName;
-    res.redirect('/welcome');
+    req.session.save(function(){
+        res.redirect('/welcome');
+    });
 });
 
 app.get('/welcome', function(req, res){
@@ -50,7 +58,9 @@ app.post('/auth/login', function(req, res){
     var pwd = req.body.password;
     if(uname===user.username && pwd === user.password){
         req.session.displayName = user.displayName;
+        req.session.save(function(){
         res.redirect('/welcome');
+        });
     } else{
         res.send('not my master <p><a href="/auth/login">return</a></p>');
     }
